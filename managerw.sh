@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Metadata
-# Version: 2024.50.123456+abc1234
+# Version: 2024.49.307311+affac90
 
 # Configuration
 REPO_URL="https://raw.githubusercontent.com/adam-carbone/microservice-manager/main"

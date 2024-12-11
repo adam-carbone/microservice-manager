@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# Metadata
+# Version: 2024.49.307322+affac90
+
 set -euo pipefail
 
 # Script to manage the Service application
