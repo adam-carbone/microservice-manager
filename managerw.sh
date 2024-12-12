@@ -2,20 +2,21 @@
 set -euo pipefail
 
 # Metadata
-# Version: 2024.49.307311+affac90
+# Version: 2024.49.363726+8e8b4ed
 
 # Configuration
-REPO_URL="https://raw.githubusercontent.com/adam-carbone/microservice-manager/main"
-MANAGERW_PATH="$0"
-MICROSERVICES_MANAGER_PATH="./microservices-manager.sh"
-
-# Cache configuration
+REPO_URL="${REPO_URL_OVERRIDE:-https://raw.githubusercontent.com/adam-carbone/microservice-manager/main}"
+MANAGER_URL="${REPO_URL}/microservices-manager.sh"
 CACHE_DIR="${HOME}/.microservices-manager"
-CACHE_FILE="${CACHE_DIR}/manager_cache"
-CACHE_TTL=$((60 * 60)) # 1 hour in seconds
+CACHE_FILE="${CACHE_DIR}/microservices-manager.sh"
+CACHE_TTL=$((60 * 60))  # 1 hour in seconds
+
+VERSION_URL="${REPO_URL}/managerw-version"
+LOCAL_VERSION="2024.50.123456"
 
 # Colors for output
 GREEN="\033[1;32m"
+YELLOW="\033[1;33m"
 RED="\033[1;31m"
 RESET="\033[0m"
 
@@ -24,37 +25,31 @@ success() {
   echo -e "${GREEN}$1${RESET}"
 }
 
+# Function to print warning messages
+warning() {
+  echo -e "${YELLOW}Warning:${RESET} $1"
+}
+
 # Function to print error messages and exit
 error() {
   echo -e "${RED}Error:${RESET} $1"
   exit 1
 }
 
-# Function to ensure the cache directory exists
+# Ensure cache directory exists
 ensure_cache_dir() {
   mkdir -p "$CACHE_DIR"
 }
 
-# Get local version from a script file
-get_local_version() {
-  grep '^# Version:' "$1" | cut -d' ' -f3 || echo "0.0.0"
-}
-
-# Get remote version from the repository
-get_remote_version() {
-  curl -sSL "$1" | grep '^# Version:' | cut -d' ' -f3 || echo "0.0.0"
-}
-
-# Compare semantic or CalVer versions
-version_gt() {
-  [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" != "$1" ]
-}
-
-# Function to check if cache is valid
+# Check if the cache file is valid
 is_cache_valid() {
-  if [ -f "$CACHE_FILE" ]; then
+  if [[ -f "$CACHE_FILE" ]]; then
     local cache_mtime
-    cache_mtime=$(stat -c %Y "$CACHE_FILE")
+    if [[ "$(uname)" == "Darwin" ]]; then
+      cache_mtime=$(stat -f %m "$CACHE_FILE")  # macOS-specific
+    else
+      cache_mtime=$(stat -c %Y "$CACHE_FILE")  # GNU stat
+    fi
     local now
     now=$(date +%s)
     (( (now - cache_mtime) < CACHE_TTL ))
@@ -63,86 +58,41 @@ is_cache_valid() {
   fi
 }
 
-# Update cache with the latest remote versions
-update_cache() {
-  echo "Fetching latest versions from remote..."
-  local remote_managerw_version
-  local remote_microservices_manager_version
-
-  remote_managerw_version=$(get_remote_version "${REPO_URL}/managerw.sh")
-  remote_microservices_manager_version=$(get_remote_version "${REPO_URL}/microservices-manager.sh")
-
-  cat <<EOF > "$CACHE_FILE"
-remote_managerw_version=$remote_managerw_version
-remote_microservices_manager_version=$remote_microservices_manager_version
-EOF
-  success "Version information cached."
+# Fetch the latest manager script
+fetch_manager() {
+  echo "Fetching the latest microservices-manager script..."
+  curl -sSL -o "$CACHE_FILE" "$MANAGER_URL" || error "Failed to download manager script from $MANAGER_URL."
+  chmod +x "$CACHE_FILE"
+  success "Fetched and cached the latest manager script."
 }
 
-# Load cached versions
-load_cache() {
-  if [ -f "$CACHE_FILE" ]; then
-    source "$CACHE_FILE"
+# Check for updates to managerw itself
+check_self_update() {
+  local remote_version
+  remote_version=$(curl -sSL "$VERSION_URL" || echo "unknown")
+  if [[ "$remote_version" != "$LOCAL_VERSION" && "$remote_version" != "unknown" ]]; then
+    warning "A new version of managerw.sh is available: $remote_version."
+    warning "Update by running: curl -sSL ${REPO_URL}/managerw.sh -o managerw.sh && chmod +x managerw.sh"
   fi
 }
 
-# Ensure `microservices-manager.sh` is up-to-date
-ensure_microservices_manager() {
-  echo "Checking for updates to microservices-manager.sh..."
-  local local_version remote_version
-  local_version="0.0.0"
-  remote_version="$remote_microservices_manager_version"
-
-  # Get the local version
-  if [ -f "$MICROSERVICES_MANAGER_PATH" ]; then
-    local_version=$(get_local_version "$MICROSERVICES_MANAGER_PATH")
-  fi
-
-  # Update if needed
-  if version_gt "$remote_version" "$local_version"; then
-    echo "Updating microservices-manager.sh to version $remote_version..."
-    curl -sSL -o "$MICROSERVICES_MANAGER_PATH" "${REPO_URL}/microservices-manager.sh" || error "Failed to download microservices-manager.sh."
-    chmod +x "$MICROSERVICES_MANAGER_PATH"
-    success "microservices-manager.sh updated to version $remote_version."
-  else
-    success "microservices-manager.sh is already up to date (version $local_version)."
-  fi
-}
-
-# Warn the user if managerw.sh is outdated
-check_managerw_update() {
-  echo "Checking for updates to managerw.sh..."
-  local local_version remote_version
-  local_version=$(get_local_version "$MANAGERW_PATH")
-  remote_version="$remote_managerw_version"
-
-  if version_gt "$remote_version" "$local_version"; then
-    echo -e "${RED}Warning:${RESET} A newer version of managerw.sh ($remote_version) is available."
-    echo -e "Run the following command to update:"
-    echo -e "${GREEN}curl -sSL ${REPO_URL}/managerw.sh -o managerw.sh && chmod +x managerw.sh${RESET}"
-  else
-    success "managerw.sh is up to date (version $local_version)."
-  fi
-}
-
-# Main function to handle commands
-main() {
+# Ensure the latest manager script is available
+ensure_latest_manager() {
   ensure_cache_dir
-
-  # Check if cache is valid; if not, update it
   if ! is_cache_valid; then
-    update_cache
+    fetch_manager
+  else
+    echo "Using cached microservices-manager script."
   fi
+}
 
-  # Load cached version information
-  load_cache
+# Main function
+main() {
+  check_self_update
+  ensure_latest_manager
 
-  # Check for updates to both scripts
-  check_managerw_update
-  ensure_microservices_manager
-
-  # Pass commands to microservices-manager.sh
-  exec "$MICROSERVICES_MANAGER_PATH" "$@"
+  # Execute the cached microservices manager script with passed arguments
+  exec "$CACHE_FILE" "$@"
 }
 
 main "$@"
