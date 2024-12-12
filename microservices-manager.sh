@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Metadata
-# Version: 2024.49.307322+affac90
+# Version: 2024.49.366426+f31db05
 
 set -euo pipefail
 
@@ -345,33 +345,8 @@ EOF
   exit 0
 }
 
-# Menu options
-if [ -n "$1" ]; then
-  case "$1" in
-    --help|help) show_help ;;
-    build) build_project ;;
-    debug) debug_local ;;
-    dev) run_local_dev ;;
-    prod) run_local_prod ;;
-    package) package_for_production ;;
-    docker-build) build_docker_image ;;
-    docker-local) build_docker_image_local ;;
-    docker-run) run_docker_local ;;
-    postman-collection)
-      build_docker_image_local
-      # Register a trap to ensure cleanup on exit or interruption
-      trap stop_docker_container EXIT
-      run_docker_local
-      wait_for_application
-      generate_postman_collection
-      stop_docker_container
-      ;;
-    docker-stop) stop_docker_container ;;
-    docker-status) docker_status ;;
-    exit) echo "Exiting."; exit 0 ;;
-    *) echo "Invalid argument. Use --help to see available commands."; exit 1 ;;
-  esac
-else
+# Function to display the interactive menu
+interactive_menu() {
   echo "Please choose an option:"
   echo "1. Build Project"
   echo "2. Debug Locally"
@@ -410,4 +385,35 @@ else
     13) echo "Exiting."; exit 0 ;;
     *) echo "Invalid choice. Exiting."; exit 1 ;;
   esac
+}
+
+# Menu options (non-interactive mode)
+if [ "${1:-}" != "" ]; then
+  case "$1" in
+    --help|help) show_help ;;
+    build) build_project ;;
+    debug) debug_local ;;
+    dev) run_local_dev ;;
+    prod) run_local_prod ;;
+    package) package_for_production ;;
+    docker-build) build_docker_image ;;
+    docker-local) build_docker_image_local ;;
+    docker-run) run_docker_local ;;
+    postman-collection)
+      build_docker_image_local
+      # Register a trap to ensure cleanup on exit or interruption
+      trap stop_docker_container EXIT
+      run_docker_local
+      wait_for_application
+      generate_postman_collection
+      stop_docker_container
+      ;;
+    docker-stop) stop_docker_container ;;
+    docker-status) docker_status ;;
+    exit) echo "Exiting."; exit 0 ;;
+    *) echo "Invalid argument. Use '--help' to see available commands."; exit 1 ;;
+  esac
+else
+  # No arguments provided, fall back to interactive menu
+  interactive_menu
 fi
