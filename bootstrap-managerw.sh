@@ -25,8 +25,7 @@ error() {
 install_managerw() {
   if [ -f "$MANAGERW_PATH" ]; then
     echo "managerw already exists at $MANAGERW_PATH."
-    echo -n "Do you want to overwrite it? (y/N): "  # Use echo -n for prompt
-    read choice
+    read -p "Do you want to overwrite it? (y/N): " choice
     if [[ "$choice" != "y" && "$choice" != "Y" ]]; then
       success "Installation aborted."
       exit 0

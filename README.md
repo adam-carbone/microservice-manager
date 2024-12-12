@@ -12,16 +12,16 @@ The **Microservices Manager** provides a lightweight and extensible framework fo
 
 1. **Lightweight Bootstrap**: Quickly set up the `managerw.sh` script with a single command.
 2. **Automatic Updates**:
-    - Ensures `microservices-manager.sh` is always up-to-date.
-    - Warns users if `managerw.sh` itself is outdated and provides an update command.
+   - Ensures `microservices-manager.sh` is always up-to-date.
+   - Warns users if `managerw.sh` itself is outdated and provides an update command.
 3. **Independent Version Management**:
-    - Easily update the versions of `managerw.sh` and `microservices-manager.sh` independently.
+   - Easily update the versions of `managerw.sh` and `microservices-manager.sh` independently.
 4. **Centralized State Management**:
-    - Stores cached version information and state in `~/.microservices-manager`.
+   - Stores cached version information and state in `~/.microservices-manager`.
 5. **Extensive Functionality**:
-    - Build, package, and run Docker containers.
-    - Manage service discovery and state.
-    - Generate Postman collections from OpenAPI specs.
+   - Build, package, and run Docker containers.
+   - Manage service discovery and state.
+   - Generate Postman collections from OpenAPI specs.
 
 ---
 
@@ -30,7 +30,7 @@ The **Microservices Manager** provides a lightweight and extensible framework fo
 To set up the **Microservices Manager**, run the following command:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/adam-carbone/microservice-manager/main/bootstrap-managerw.sh | bash -s install
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/adam-carbone/microservice-manager/main/bootstrap-managerw.sh)"
 ```
 
 This will:
@@ -46,7 +46,7 @@ This will:
 Once installed, you can run commands using `managerw.sh`:
 
 ```bash
-./managerw.sh [COMMAND]
+./managerw [COMMAND]
 ```
 
 ### **Common Commands**
