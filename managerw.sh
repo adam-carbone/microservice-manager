@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Metadata
-# Version: 2024.50.367839+4bda10d
+# Version: 2024.50.368496+80c007e
 
 # Configuration
 REPO_URL="${REPO_URL_OVERRIDE:-https://raw.githubusercontent.com/adam-carbone/microservice-manager/main}"
@@ -76,10 +76,14 @@ check_self_update() {
 
 # Update managerw.sh
 update_self() {
-  echo "Updating managerw.sh to the latest version..."
+  local current_version remote_version
+  current_version=$(extract_version local)
+  remote_version=$(extract_version remote || echo "unknown")
+
+  echo "Updating managerw.sh to the latest version [${current_version} -> ${remote_version}]..."
   curl -sSL -o "$0" "$SCRIPT_URL" || error "Failed to download managerw.sh from $SCRIPT_URL."
   chmod +x "$0"
-  success "managerw.sh successfully updated to the latest version."
+  success "managerw.sh successfully updated to version ${remote_version}."
 }
 
 # Ensure the latest manager script is available
@@ -94,7 +98,7 @@ ensure_latest_manager() {
 
 # Append managerw-specific help
 append_help() {
-  cat <<EOF
+cat <<EOF
 
 Managerw-Specific Commands:
   update    Update the managerw.sh script to the latest version.
