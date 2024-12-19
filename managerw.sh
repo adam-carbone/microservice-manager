@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Metadata
-# Version: 2024.50.366775+51b28aa
+# Version: 2024.50.367839+4bda10d
 
 # Configuration
 REPO_URL="${REPO_URL_OVERRIDE:-https://raw.githubusercontent.com/adam-carbone/microservice-manager/main}"
@@ -18,7 +18,7 @@ YELLOW="\033[1;33m"
 RED="\033[1;31m"
 RESET="\033[0m"
 
-# Function to print messages
+# Print messages
 success() { echo -e "${GREEN}$1${RESET}"; }
 warning() { echo -e "${YELLOW}Warning:${RESET} $1"; }
 error() { echo -e "${RED}Error:${RESET} $1"; exit 1; }
@@ -31,11 +31,10 @@ is_cache_valid() {
   if [[ -f "$CACHE_FILE" ]]; then
     local cache_mtime now
     if [[ "$(uname)" == "Darwin" ]]; then
-      cache_mtime=$(stat -f %m "$CACHE_FILE")  # macOS-specific
+      cache_mtime=$(stat -f %m "$CACHE_FILE")
     else
-      cache_mtime=$(stat -c %Y "$CACHE_FILE")  # GNU stat
+      cache_mtime=$(stat -c %Y "$CACHE_FILE")
     fi
-
     now=$(date +%s)
     (( (now - cache_mtime) < CACHE_TTL ))
   else
@@ -43,15 +42,7 @@ is_cache_valid() {
   fi
 }
 
-# Fetch the latest manager script
-fetch_manager() {
-  echo "Fetching the latest microservices-manager script..."
-  curl -sSL -o "$CACHE_FILE" "$MANAGER_URL" || error "Failed to download manager script from $MANAGER_URL."
-  chmod +x "$CACHE_FILE"
-  success "Fetched and cached the latest manager script."
-}
-
-# Extract the version from a given source (local file or URL)
+# Extract version from a source
 extract_version() {
   local source=$1
   if [[ "$source" == "local" ]]; then
@@ -63,9 +54,16 @@ extract_version() {
   fi
 }
 
+# Fetch the latest manager script
+fetch_manager() {
+  echo "Fetching the latest microservices-manager script..."
+  curl -sSL -o "$CACHE_FILE" "$MANAGER_URL" || error "Failed to download manager script from $MANAGER_URL."
+  chmod +x "$CACHE_FILE"
+  success "Fetched and cached the latest manager script."
+}
+
 # Check for updates to managerw.sh
 check_self_update() {
-  echo "Checking for updates to managerw.sh..."
   local local_version remote_version
   local_version=$(extract_version local)
   remote_version=$(extract_version remote || echo "unknown")
@@ -94,6 +92,16 @@ ensure_latest_manager() {
   fi
 }
 
+# Append managerw-specific help
+append_help() {
+  cat <<EOF
+
+Managerw-Specific Commands:
+  update    Update the managerw.sh script to the latest version.
+  version   Show the current and latest versions of managerw.sh.
+EOF
+}
+
 # Main function
 main() {
   case "${1:-}" in
@@ -106,6 +114,12 @@ main() {
       remote_version=$(extract_version remote || echo "unknown")
       echo "Local version: $local_version"
       echo "Remote version: $remote_version"
+      ;;
+    help|--help)
+      check_self_update
+      ensure_latest_manager
+      "$CACHE_FILE" "$@" || true
+      append_help
       ;;
     *)
       check_self_update
