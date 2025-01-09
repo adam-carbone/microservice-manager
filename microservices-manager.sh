@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Metadata
-# Version: 2025.01.398538+fae678a
+# Version: 2025.01.399020+d0068d3
 
 set -euo pipefail
 
@@ -12,6 +12,15 @@ base_dir="${PAQQETS_BASE_DIR:-"$HOME/.paqqets"}"
 
 # Directory for log files (can be overridden with PAQQETS_LOG_DIR)
 log_dir="${PAQQETS_LOG_DIR:-"$(dirname "$0")"}"
+
+# Function to read a property from a file
+read_property() {
+  local file=$1
+  local key=$2
+  if [ -f "$file" ]; then
+    grep "^$key=" "$file" | cut -d'=' -f2
+  fi
+}
 
 # Function to determine Docker container name
 get_docker_container_name() {
@@ -97,15 +106,6 @@ find_service() {
   local service_name=$1
   if [ -f "$services_file" ]; then
     grep "^${service_name}=" "$services_file" | cut -d'=' -f2
-  fi
-}
-
-# Function to read a property from a file
-read_property() {
-  local file=$1
-  local key=$2
-  if [ -f "$file" ]; then
-    grep "^$key=" "$file" | cut -d'=' -f2
   fi
 }
 
