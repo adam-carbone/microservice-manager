@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Metadata
-# Version: 2025.01.398331+2d2782e
+# Version: 2025.01.398538+fae678a
 
 set -euo pipefail
 
@@ -12,16 +12,6 @@ base_dir="${PAQQETS_BASE_DIR:-"$HOME/.paqqets"}"
 
 # Directory for log files (can be overridden with PAQQETS_LOG_DIR)
 log_dir="${PAQQETS_LOG_DIR:-"$(dirname "$0")"}"
-
-container_port=8443
-port_search_range=100
-docker_container_name=$(get_docker_container_name)
-state_file="$base_dir/${docker_container_name}/_state-file"
-open_port_file="$base_dir/${docker_container_name}/_open_port"
-lock_file="$base_dir/services.lock"
-services_file="$base_dir/services"
-default_log_file="$log_dir/${docker_container_name}_$(date +'%Y%m%d_%H%M%S').log"
-postman_collection_file="postman_collection.json"
 
 # Function to determine Docker container name
 get_docker_container_name() {
@@ -35,6 +25,16 @@ get_docker_container_name() {
 
   echo "$container_name"
 }
+
+container_port=8443
+port_search_range=100
+docker_container_name=$(get_docker_container_name)
+state_file="$base_dir/${docker_container_name}/_state-file"
+open_port_file="$base_dir/${docker_container_name}/_open_port"
+lock_file="$base_dir/services.lock"
+services_file="$base_dir/services"
+default_log_file="$log_dir/${docker_container_name}_$(date +'%Y%m%d_%H%M%S').log"
+postman_collection_file="postman_collection.json"
 
 
 # Function to ensure directories exist
