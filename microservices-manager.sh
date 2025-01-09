@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Metadata
-# Version: 2024.50.366783+51b28aa
+# Version: 2025.01.398331+2d2782e
 
 set -euo pipefail
 
@@ -15,13 +15,27 @@ log_dir="${PAQQETS_LOG_DIR:-"$(dirname "$0")"}"
 
 container_port=8443
 port_search_range=100
-docker_container_name="notification-service"
+docker_container_name=$(get_docker_container_name)
 state_file="$base_dir/${docker_container_name}/_state-file"
 open_port_file="$base_dir/${docker_container_name}/_open_port"
 lock_file="$base_dir/services.lock"
 services_file="$base_dir/services"
 default_log_file="$log_dir/${docker_container_name}_$(date +'%Y%m%d_%H%M%S').log"
 postman_collection_file="postman_collection.json"
+
+# Function to determine Docker container name
+get_docker_container_name() {
+  local container_name
+  container_name=$(read_property "./gradle.properties" "dockerContainerName") || true
+
+  if [ -z "$container_name" ]; then
+    # Fallback to project directory name if property is not set
+    container_name=$(basename "$(pwd)")
+  fi
+
+  echo "$container_name"
+}
+
 
 # Function to ensure directories exist
 ensure_directory() {
