@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Metadata
-# Version: 2025.01.399020+d0068d3
+# Version: 2025.01.417454+05fbb69
 
 set -euo pipefail
 
@@ -35,8 +35,8 @@ get_docker_container_name() {
   echo "$container_name"
 }
 
-container_port=8443
-port_search_range=100
+container_port=8000
+port_search_range=1000
 docker_container_name=$(get_docker_container_name)
 state_file="$base_dir/${docker_container_name}/_state-file"
 open_port_file="$base_dir/${docker_container_name}/_open_port"
