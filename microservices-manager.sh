@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Metadata
-# Version: 2025.01.417454+05fbb69
+# Version: 2025.02.206008+41e5b67
 
 set -euo pipefail
 
